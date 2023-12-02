@@ -15,20 +15,36 @@
    "nine"  9})
 
 (def digit-regex
-  (re-pattern (string/join "|" (cons "\\d" (keys digit-names)))))
+  (re-pattern (str "^(" (string/join "|" (cons "\\d" (keys digit-names)))
+                   ")")))
 
 (defn parse-line [line]
-  (parse-long
-   (let [digits (map (fn [digit]
-                       (get digit-names digit digit))
-                     (re-seq digit-regex line))]
-     (str (first digits) (last digits)))))
+  ;; Regular re-seq doesn't work because it consumes each match from
+  ;; the input before looking for the next match. So a string
+  ;; like "oneight" matches "one" but then only "ight" is left, so it
+  ;; doesn't match "eight" at the end.
+  (keep (fn [part]
+          (when-let [[_ digit] (re-find digit-regex part)]
+            (get digit-names digit digit)))
+        (for [i (range (count line))]
+          (subs line i))))
+
+(defn combine-found-digits [digits]
+  (parse-long (str (first digits) (last digits))))
 
 (comment
-  (map parse-line (line-seq
-                   (java.io.BufferedReader.
-                    (java.io.StringReader.
-                     "two1nine
+  (parse-line "oneight")
+  ;;=> (1 8)
+
+  (parse-line "24oneightnineightfour")
+  ;;=> ("2" "4" 1 8 9 8 4)
+
+  (map (comp combine-found-digits
+             parse-line)
+       (line-seq
+        (java.io.BufferedReader.
+         (java.io.StringReader.
+          "two1nine
 eightwothree
 abcone2threexyz
 xtwone3four
@@ -38,24 +54,23 @@ zoneight234
   ;;=>
   (29 83 13 24 42 14 76)
 
-  (reduce + *1)
-  ;;=>
-  281
+  (reduce + *1) ;;=> 281
 
-  (parse-line "n5") ;;=>55
+  (parse-line "n5") ;;=> ("5")
 
-  (parse-line "7bzcnthreejdh7oneightj") ;;=> 71
-  (re-seq digit-regex "7bzcnthreejdh7oneightj"))
+  (parse-line "7bzcnthreejdh7oneightj")
+  ;;=> ("7" 3 "7" 1 8)
+)
 
 (defn run [input-path]
   (with-open [rdr (io/reader input-path)]
     (reduce (fn [sum line]
-              (+ sum (parse-line line)))
+              (+ sum (combine-found-digits (parse-line line))))
             0
             (line-seq rdr))))
 
 (comment
   (run "../input/day01/input.txt")
-  ;;=> 54533
+  ;;=> 54518
   )
 
