@@ -141,3 +141,82 @@
   ;;     {:number 598, :positions [[5 9] [6 9] [7 9]]}]
 
   )
+
+(def adjacency-offsets
+  [[-1 -1] [0 1] [1 -1]
+   [-1 0]        [1 0]
+   [-1 1]  [0 1] [1 1]])
+
+(defn point-add [[x1 y1] [x2 y2]]
+  [(+ x1 x2) (+ y1 y2)])
+
+(defn adjacent-to-symbol? [symbol-positions position]
+  (some (fn [point] (contains? symbol-positions point))
+        (map (fn [offset] (point-add position offset))
+             adjacency-offsets)))
+
+(comment
+  (let [position [3 4]]
+    (map (fn [offset] (point-add position offset))
+         adjacency-offsets))
+  ;; => ([2 3] [3 5] [4 3] [2 4] [4 4] [2 5] [3 5] [4 5])
+)
+
+(defn number-adjacent-to-symbol? [symbol-positions {:keys [number positions]}]
+  (some (fn [position]
+          (adjacent-to-symbol? symbol-positions position))
+        positions))
+
+(comment
+  (let [input (scan-input "../input/day03/sample.txt")
+        symbol-positions (find-symbols input)]
+    (into []
+          (comp (find-numbers)
+                (filter #(number-adjacent-to-symbol? symbol-positions %)))
+          input))
+  ;; => [{:number 467, :positions [[0 0] [1 0] [2 0]]}
+  ;;     {:number 35, :positions [[2 2] [3 2]]}
+  ;;     {:number 633, :positions [[6 2] [7 2] [8 2]]}
+  ;;     {:number 617, :positions [[0 4] [1 4] [2 4]]}
+  ;;     {:number 592, :positions [[2 6] [3 6] [4 6]]}
+  ;;     {:number 755, :positions [[6 7] [7 7] [8 7]]}
+  ;;     {:number 664, :positions [[1 9] [2 9] [3 9]]}
+  ;;     {:number 598, :positions [[5 9] [6 9] [7 9]]}]
+
+)
+
+(defn run [input-path]
+  (let [input (scan-input input-path)
+        symbol-positions (find-symbols input)]
+    (transduce (comp (find-numbers)
+                     (filter #(number-adjacent-to-symbol? symbol-positions %))
+                     (map :number))
+               +
+               0
+               input)))
+
+(comment
+  (run "../input/day03/sample.txt")
+  ;; => 4361
+
+  (run "../input/day03/input.txt")
+  ;; => 540116
+
+  (with-open [out (io/writer "/tmp/output.edn")]
+    (binding [*out* (java.io.PrintWriter. out)]
+      (let [input (scan-input "../input/day03/input.txt")]
+        (run! prn (eduction
+                   (filter input-is-symbol?)
+                   input)))))
+
+  (with-open [out (io/writer "/tmp/output.edn")]
+    (binding [*out* (java.io.PrintWriter. out)]
+      (let [input (scan-input "../input/day03/input.txt")
+            symbol-positions (find-symbols input)]
+        (run! prn (eduction
+                   (comp (find-numbers)
+                         (filter #(number-adjacent-to-symbol? symbol-positions %))
+                         (map :number))
+                   input)))))
+
+  )
