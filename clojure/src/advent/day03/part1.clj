@@ -143,7 +143,7 @@
   )
 
 (def adjacency-offsets
-  [[-1 -1] [0 1] [1 -1]
+  [[-1 -1] [0 -1] [1 -1]
    [-1 0]        [1 0]
    [-1 1]  [0 1] [1 1]])
 
@@ -200,7 +200,7 @@
   ;; => 4361
 
   (run "../input/day03/input.txt")
-  ;; => 540116
+  ;; => 540131
 
   (with-open [out (io/writer "/tmp/output.edn")]
     (binding [*out* (java.io.PrintWriter. out)]
