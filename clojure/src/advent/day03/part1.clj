@@ -162,7 +162,7 @@
   ;; => ([2 3] [3 5] [4 3] [2 4] [4 4] [2 5] [3 5] [4 5])
 )
 
-(defn number-adjacent-to-symbol? [symbol-positions {:keys [number positions]}]
+(defn number-adjacent-to-symbol? [symbol-positions {:keys [positions]}]
   (some (fn [position]
           (adjacent-to-symbol? symbol-positions position))
         positions))
