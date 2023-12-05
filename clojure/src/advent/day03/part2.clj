@@ -80,7 +80,7 @@
 
 (comment
   (let [input (part1/scan-input "../input/day03/sample.txt")
-        number-index (index-numbers input)]
+        number-index (index-numbers (eduction (part1/find-numbers) input))]
     (into []
           (comp
            (filter (fn [{:keys [character]}] (= \* character)))
