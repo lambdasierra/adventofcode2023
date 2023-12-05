@@ -97,6 +97,14 @@
      (map #(find-adjacent-numbers number-index %))
      input)))
 
+;; Idea: collections of objects.
+;; "Object" is a type and a collection of coordinates it occupies.
+;; That is its unique identity.
+;; From that we can compute all of its adjacent coordinates.
+;; And we can generate indices of objects by type,
+;; coordinate, or adjacency.
 
 (defn run [input-path]
-  (let [possible-gears (into [])]))
+  (let [possible-gears (into [])]
+    ;; ... TODO ...
+    ))
