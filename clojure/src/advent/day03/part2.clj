@@ -86,25 +86,37 @@
            (filter (fn [{:keys [character]}] (= \* character)))
            (map #(find-adjacent-numbers number-index %)))
           input))
-  ;; => [#{} #{} #{}]
+  ;; => [#{{:number 35, :positions [[2 2] [3 2]]}
+  ;;       {:number 467, :positions [[0 0] [1 0] [2 0]]}}
+  ;;     #{{:number 617, :positions [[0 4] [1 4] [2 4]]}}
+  ;;     #{{:number 755, :positions [[6 7] [7 7] [8 7]]}
+  ;;       {:number 598, :positions [[5 9] [6 9] [7 9]]}}]
 
   )
 
 (defn find-gears [input]
-  (let [number-index (index-numbers input)]
+  (let [number-index (index-numbers (eduction (part1/find-numbers) input))]
     (eduction
      (filter (fn [{:keys [character]}] (= \* character)))
      (map #(find-adjacent-numbers number-index %))
+     (filter #(= 2 (count %)))
+
      input)))
 
-;; Idea: collections of objects.
-;; "Object" is a type and a collection of coordinates it occupies.
-;; That is its unique identity.
-;; From that we can compute all of its adjacent coordinates.
-;; And we can generate indices of objects by type,
-;; coordinate, or adjacency.
-
 (defn run [input-path]
-  (let [possible-gears (into [])]
-    ;; ... TODO ...
-    ))
+    (transduce (map (fn [gear]
+                    (let [numbers (seq gear)]
+                      (* (:number (first numbers))
+                         (:number (second numbers))))))
+             +
+             0
+             (find-gears (part1/scan-input input-path))))
+
+(comment
+  (run "../input/day03/sample.txt")
+  ;; => 467835
+
+  (run "../input/day03/input.txt")
+  ;; => 86879020
+
+  )
