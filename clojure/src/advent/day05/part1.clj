@@ -30,3 +30,34 @@
   (let [[[seed-line] & mappings] (split-on-blank-lines (line-seq rdr))]
     (assoc (parse-seeds seed-line)
            :mappings (mapv parse-mapping mappings))))
+
+(def attribute-order
+  ["seed" "soil" "fertilizer" "water" "light"
+   "temperature" "humidity" "location"])
+
+(def mapping-order
+  (map (fn [source target]
+         {:source source
+          :target target})
+       attribute-order
+       (next attribute-order)))
+
+(defn convert [source-value ranges]
+  (or (some (fn [{:keys [source-start target-start length]}]
+              (let [source-last (+ source-start length -1)]
+                (when (<= source-start source-value source-last)
+                  (+ target-start
+                     (- source-value source-start)))))
+            ranges)
+      source-value))
+
+(defn seed-to-location [seed mappings]
+  (reduce (fn [source-value {:keys [ranges]}]
+            (convert source-value ranges))
+          seed
+          mappings))
+
+(defn run [input-path]
+  (with-open [rdr (io/reader input-path)]
+    (let [{:keys [seeds mappings]} (parse-input rdr)]
+      (apply min (map (fn [seed] (seed-to-location seed mappings)) seeds)))))

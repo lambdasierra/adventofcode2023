@@ -78,3 +78,50 @@ another-thing-to-thing map:
   (binding [*out* (java.io.PrintWriter. out)]
     (clojure.pprint/pprint (parse-input in))))
 ;; => nil
+
+mapping-order
+;; => ({:source "seed", :target "soil"}
+;;     {:source "soil", :target "fertilizer"}
+;;     {:source "fertilizer", :target "water"}
+;;     {:source "water", :target "light"}
+;;     {:source "light", :target "temperature"}
+;;     {:source "temperature", :target "humidity"}
+;;     {:source "humidity", :target "location"})
+
+(def seed-to-soil-ranges
+  [{:target-start 50, :source-start 98, :length 2}
+   {:target-start 52, :source-start 50, :length 48}])
+
+(convert 79 seed-to-soil-ranges)
+;; => 81
+(convert 14 seed-to-soil-ranges)
+;; => 14
+(convert 55 seed-to-soil-ranges)
+;; => 57
+(convert 13 seed-to-soil-ranges)
+;; => 13
+
+(def sample-data
+  (with-open [rdr (io/reader "../input/day05/sample.txt")]
+    (parse-input rdr)))
+
+(defn seed-to-location-path [seed mappings]
+  (reductions (fn [source-value {:keys [ranges]}]
+                (convert source-value ranges))
+              seed
+              mappings))
+
+(seed-to-location-path 79 (:mappings sample-data))
+;; => (79 81 81 81 74 78 78 82)
+(seed-to-location-path 14 (:mappings sample-data))
+;; => (14 14 53 49 42 42 43 43)
+(seed-to-location-path 55 (:mappings sample-data))
+;; => (55 57 57 53 46 82 82 86)
+(seed-to-location-path 13 (:mappings sample-data))
+;; => (13 13 52 41 34 34 35 35)
+
+(run "../input/day05/sample.txt")
+;; => 35
+
+(run "../input/day05/input.txt")
+;; => 662197086
