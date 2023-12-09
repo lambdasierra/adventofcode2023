@@ -35,6 +35,14 @@
        :remaining [{:start input-start
                     :length input-length}]}
 
+      ;; No overlap:
+      ;; ................[ input ]...
+      ;; ...[ mapping ]..............
+      (< mapping-last input-start)
+      {:found-mapping :none
+       :remaining [{:start input-start
+                    :length input-length}]}
+
       ;; Overlap on start of mapping:
       ;; ...[ input ]..........
       ;; ........[ mapping ]...
@@ -69,14 +77,6 @@
                    :length mapped-length}]
          :remaining [{:start (+ input-start mapped-length)
                       :length (- input-last mapping-last)}]})
-
-      ;; No overlap:
-      ;; ................[ input ]...
-      ;; ...[ mapping ]..............
-      (< mapping-last input-start)
-      {:found-mapping :none
-       :remaining [{:start input-start
-                    :length input-length}]}
 
       :else
       :error-this-should-not-happen)))

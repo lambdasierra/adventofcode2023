@@ -83,7 +83,11 @@
 ;;     :mapped [{:start 100, :length 5}],
 ;;     :remaining [{:start 14, :length 4}]}
 
-
-
-;; For soil I have [{:start 52 :length 14}]
+;; No overlap:
+;; ................[ input ]...
+;; ...[ mapping ]..............
+(apply-mapping-range
+ {:start 16 :length 9}
+ {:target-start 100, :source-start 3, :length 11})
+;; => {:found-mapping :none, :remaining [{:start 16, :length 9}]}
 
