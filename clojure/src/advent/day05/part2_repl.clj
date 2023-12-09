@@ -44,14 +44,46 @@
 ;;       [{:target-start 60, :source-start 56, :length 37}
 ;;        {:target-start 56, :source-start 93, :length 4}]}]}
 
-(apply-mapping-range
- {:start 79 :length 14}
- {:target-start 50, :source-start 98, :length 2})
-;; => {:found-mapping :none, :remaining [{:start 79, :length 14}]}
 
+;; No overlap:
+;; ...[ input ]................
+;; ..............[ mapping ]...
 (apply-mapping-range
- {:start 79 :length 14}
- {:target-start 52, :source-start 50, :length 48})
-;; => {:found-mapping :overlap-all, :mapped [{:start 52, :length 14}]}
+ {:start 3 :length 9}
+ {:target-start 100, :source-start 14, :length 11})
+;; => {:found-mapping :none, :remaining [{:start 3, :length 9}]}
 
+;; Overlap on start of mapping:
+;; ...[ input ]..........
+;; ........[ mapping ]...
+(apply-mapping-range
+ {:start 3 :length 9}
+ {:target-start 100, :source-start 8, :length 11})
+;; => {:found-mapping :overlap-start,
+;;     :mapped [{:start 100, :length 4}],
+;;     :remaining [{:start 3, :length 5}]}
+
+;; Complete overlap:
+;; .....[ input ]....
+;; ....[ mapping ]...
+(apply-mapping-range
+ {:start 5 :length 9}
+ {:target-start 100, :source-start 4, :length 11})
+;; => {:found-mapping :overlap-all, :mapped [{:start 100, :length 9}]}
+
+;; Overlap on end of mapping:
+;; .........[ input ]....
+;; ...[ mapping ]........
+(apply-mapping-range
+ {:start 9 :length 9}
+ {:target-start 100, :source-start 3, :length 11})
+;; => {:found-mapping :overlap-end,
+;;     :input-last 17,
+;;     :mapping-last 13,
+;;     :mapped [{:start 100, :length 5}],
+;;     :remaining [{:start 14, :length 4}]}
+
+
+
+;; For soil I have [{:start 52 :length 14}]
 

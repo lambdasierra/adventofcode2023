@@ -19,16 +19,18 @@
            :mappings (mapv part1/parse-mapping mappings))))
 
 (defn apply-mapping-range [input mapping-range]
-  (let [{input-start :start input-length :length} input
+  (let [{input-start :start
+         input-length :length} input
         input-last (+ input-start input-length -1)
-        {:keys [source-start target-start]
+        {mapping-start :source-start
+         target-start :target-start
          mapping-length :length} mapping-range
-        source-last (+ source-start mapping-length -1)]
+        mapping-last (+ mapping-start mapping-length -1)]
     (cond
       ;; No overlap:
       ;; ...[ input ]................
       ;; ..............[ mapping ]...
-      (< input-last source-start)
+      (< input-last mapping-start)
       {:found-mapping :none
        :remaining [{:start input-start
                     :length input-length}]}
@@ -36,20 +38,20 @@
       ;; Overlap on start of mapping:
       ;; ...[ input ]..........
       ;; ........[ mapping ]...
-      (and (< input-start source-start)
-           (< input-last source-last))
-      (let [mapped-length (- input-last source-start)]
+      (and (< input-start mapping-start)
+           (< input-last mapping-last))
+      (let [mapped-length (inc (- input-last mapping-start))]
         {:found-mapping :overlap-start
          :mapped [{:start target-start
                    :length mapped-length}]
          :remaining [{:start input-start
-                      :length (- mapping-length mapped-length)}]})
+                      :length (- mapping-start input-start)}]})
 
       ;; Complete overlap:
       ;; .....[ input ]....
       ;; ....[ mapping ]...
-      (and (<= source-start input-start)
-           (<= input-last source-last))
+      (and (<= mapping-start input-start)
+           (<= input-last mapping-last))
       {:found-mapping :overlap-all
        :mapped [{:start target-start
                  :length input-length}]}
@@ -57,19 +59,21 @@
       ;; Overlap on end of mapping:
       ;; .........[ input ]....
       ;; ...[ mapping ]........
-      (and (< source-start input-start)
-           (< source-last input-last))
-      (let [mapped-length (- input-last source-start)]
+      (and (< mapping-start input-start)
+           (< mapping-last input-last))
+      (let [mapped-length (inc (- mapping-last input-start))]
         {:found-mapping :overlap-end
+         :input-last input-last
+         :mapping-last mapping-last
          :mapped [{:start target-start
                    :length mapped-length}]
-         :remaining [{:start source-last
-                      :length (- input-length mapped-length)}]})
+         :remaining [{:start (+ input-start mapped-length)
+                      :length (- input-last mapping-last)}]})
 
       ;; No overlap:
       ;; ................[ input ]...
       ;; ...[ mapping ]..............
-      (< source-last input-start)
+      (< mapping-last input-start)
       {:found-mapping :none
        :remaining [{:start input-start
                     :length input-length}]}
