@@ -51,7 +51,8 @@
 (apply-mapping-range
  {:start 3 :length 9}
  {:target-start 100, :source-start 14, :length 11})
-;; => {:found-mapping :none, :remaining [{:start 3, :length 9}]}
+;; => {:found-mapping :none, :remaining {:start 3, :length 9}}
+
 
 ;; Overlap on start of mapping:
 ;; ...[ input ]..........
@@ -60,8 +61,8 @@
  {:start 3 :length 9}
  {:target-start 100, :source-start 8, :length 11})
 ;; => {:found-mapping :overlap-start,
-;;     :mapped [{:start 100, :length 4}],
-;;     :remaining [{:start 3, :length 5}]}
+;;     :mapped {:start 100, :length 4},
+;;     :remaining {:start 3, :length 5}}
 
 ;; Complete overlap:
 ;; .....[ input ]....
@@ -69,7 +70,8 @@
 (apply-mapping-range
  {:start 5 :length 9}
  {:target-start 100, :source-start 4, :length 11})
-;; => {:found-mapping :overlap-all, :mapped [{:start 100, :length 9}]}
+;; => {:found-mapping :overlap-all, :mapped {:start 100, :length 9}}
+
 
 ;; Overlap on end of mapping:
 ;; .........[ input ]....
@@ -80,8 +82,8 @@
 ;; => {:found-mapping :overlap-end,
 ;;     :input-last 17,
 ;;     :mapping-last 13,
-;;     :mapped [{:start 100, :length 5}],
-;;     :remaining [{:start 14, :length 4}]}
+;;     :mapped {:start 100, :length 5},
+;;     :remaining {:start 14, :length 4}}
 
 ;; No overlap:
 ;; ................[ input ]...
@@ -89,5 +91,23 @@
 (apply-mapping-range
  {:start 16 :length 9}
  {:target-start 100, :source-start 3, :length 11})
-;; => {:found-mapping :none, :remaining [{:start 16, :length 9}]}
+;; => {:found-mapping :none, :remaining {:start 16, :length 9}}
 
+
+(apply-all-mappings
+ [{:start 79, :length 14}    ; 79..93 inclusive
+  {:start 55, :length 13}]   ; 55..68 inclusive
+ [{:target-start 50, :source-start 98, :length 2}     ; 98..99 => 50..51
+  {:target-start 52, :source-start 50, :length 48}    ; 50..98 => 52..100
+])
+;; => [{:start 52, :length 14} {:start 52, :length 13}]
+
+
+
+(apply-all-mappings
+ [{:start 52, :length 14} {:start 52, :length 13}]
+ [{:target-start 0, :source-start 15, :length 37}
+  {:target-start 37, :source-start 52, :length 2}
+  {:target-start 39, :source-start 0, :length 15}])
+;; => Execution error (ExceptionInfo) at advent.day05.part2/apply-mapping-range (part2.clj:82).
+;;    This should not happen
