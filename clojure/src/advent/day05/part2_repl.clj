@@ -2,7 +2,34 @@
 
 (with-open [rdr (io/reader "../input/day05/sample.txt")]
   (parse-input rdr))
-;; => {:seeds [{:start 79, :length 14} {:start 55, :length 13}],
+;; => {:seeds
+;;     [79
+;;      80
+;;      81
+;;      82
+;;      83
+;;      84
+;;      85
+;;      86
+;;      87
+;;      88
+;;      89
+;;      90
+;;      91
+;;      92
+;;      55
+;;      56
+;;      57
+;;      58
+;;      59
+;;      60
+;;      61
+;;      62
+;;      63
+;;      64
+;;      65
+;;      66
+;;      67],
 ;;     :mappings
 ;;     [{:source "seed",
 ;;       :target "soil",
@@ -44,70 +71,9 @@
 ;;       [{:target-start 60, :source-start 56, :length 37}
 ;;        {:target-start 56, :source-start 93, :length 4}]}]}
 
+(run "../input/day05/sample.txt")
+;; => 46
 
-;; No overlap:
-;; ...[ input ]................
-;; ..............[ mapping ]...
-(apply-mapping-range
- {:start 3 :length 9}
- {:target-start 100, :source-start 14, :length 11})
-;; => {:found-mapping :none, :remaining {:start 3, :length 9}}
-
-
-;; Overlap on start of mapping:
-;; ...[ input ]..........
-;; ........[ mapping ]...
-(apply-mapping-range
- {:start 3 :length 9}
- {:target-start 100, :source-start 8, :length 11})
-;; => {:found-mapping :overlap-start,
-;;     :mapped {:start 100, :length 4},
-;;     :remaining {:start 3, :length 5}}
-
-;; Complete overlap:
-;; .....[ input ]....
-;; ....[ mapping ]...
-(apply-mapping-range
- {:start 5 :length 9}
- {:target-start 100, :source-start 4, :length 11})
-;; => {:found-mapping :overlap-all, :mapped {:start 100, :length 9}}
-
-
-;; Overlap on end of mapping:
-;; .........[ input ]....
-;; ...[ mapping ]........
-(apply-mapping-range
- {:start 9 :length 9}
- {:target-start 100, :source-start 3, :length 11})
-;; => {:found-mapping :overlap-end,
-;;     :input-last 17,
-;;     :mapping-last 13,
-;;     :mapped {:start 100, :length 5},
-;;     :remaining {:start 14, :length 4}}
-
-;; No overlap:
-;; ................[ input ]...
-;; ...[ mapping ]..............
-(apply-mapping-range
- {:start 16 :length 9}
- {:target-start 100, :source-start 3, :length 11})
-;; => {:found-mapping :none, :remaining {:start 16, :length 9}}
-
-
-(apply-all-mappings
- [{:start 79, :length 14}    ; 79..93 inclusive
-  {:start 55, :length 13}]   ; 55..68 inclusive
- [{:target-start 50, :source-start 98, :length 2}     ; 98..99 => 50..51
-  {:target-start 52, :source-start 50, :length 48}    ; 50..98 => 52..100
-])
-;; => [{:start 52, :length 14} {:start 52, :length 13}]
-
-
-
-(apply-all-mappings
- [{:start 52, :length 14} {:start 52, :length 13}]
- [{:target-start 0, :source-start 15, :length 37}
-  {:target-start 37, :source-start 52, :length 2}
-  {:target-start 39, :source-start 0, :length 15}])
-;; => Execution error (ExceptionInfo) at advent.day05.part2/apply-mapping-range (part2.clj:82).
-;;    This should not happen
+(run "../input/day05/input.txt")
+;; => Execution error (OutOfMemoryError) at java.lang.Long/valueOf (Long.java:1204).
+;;    Java heap space
