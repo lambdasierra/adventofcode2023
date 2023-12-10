@@ -1,0 +1,117 @@
+#+TITLE: Day 5, Part 2, Advent of Code 2023
+
+#+begin_src clojure :results silent
+(in-ns 'advent.day05.part2)
+#+end_src
+
+#+begin_src clojure :results silent
+  (defn print-mapping [input-range mapping-range]
+    (let [{input-start :start
+           input-length :length} input-range
+          input-end (+ input-start input-length)
+          {mapping-start :source-start
+           mapping-length :length} mapping-range
+          mapping-end (+ mapping-start mapping-length)]
+      (printf "Input:   %d to %d (length %d)%n" input-start input-end input-length)
+      (printf "Mapping: %d to %d (length %d)%n" mapping-start mapping-end mapping-length)
+      (dotimes [i input-start]
+        (print "."))
+      (print "[")
+      (dotimes [i (dec input-length)]
+        (print "-"))
+      (print "]")
+      (dotimes [i 3]
+        (print "."))
+      (newline)
+      (dotimes [i mapping-start]
+        (print "."))
+      (print "[")
+      (dotimes [i (dec mapping-length)]
+        (print "-"))
+      (print "]")
+      (dotimes [i 3]
+        (print "."))
+      (newline)
+      (apply-mapping input-range mapping-range)))
+#+end_src
+
+#+begin_src clojure :results pp
+  (apply-mapping {:start 0 :length 10}
+                 {:source-start 0 :length 10 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Overlap: 0 to 10 (length 10)
+: Mapped:  100 to 110 (length 10)
+: 
+: 
+
+#+begin_src clojure :results output
+  (print-mapping {:start 0 :length 10}
+                 {:source-start 0 :length 10 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Input:   0 to 10 (length 10)
+: Mapping: 0 to 10 (length 10)
+: [---------]...
+: [---------]...
+: Overlap: 0 to 10 (length 10)
+: Mapped:  100 to 110 (length 10)
+
+#+begin_src clojure :results output
+  (print-mapping {:start 3 :length 5}
+                 {:source-start 0 :length 10 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Input:   3 to 8 (length 5)
+: Mapping: 0 to 10 (length 10)
+: ...[----]...
+: [---------]...
+: Overlap: 3 to 8 (length 5)
+: Mapped:  103 to 108 (length 5)
+
+#+begin_src clojure :results output
+  (print-mapping {:start 0 :length 10}
+                 {:source-start 3 :length 5 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Input:   0 to 10 (length 10)
+: Mapping: 3 to 8 (length 5)
+: [---------]...
+: ...[----]...
+: Non-overlap before: 0 to 3 (length 3)
+: Non-overlap after:  8 to 10 (length 2)
+: Overlap: 3 to 8 (length 5)
+: Mapped:  100 to 105 (length 5)
+
+#+begin_src clojure :results output
+  (print-mapping {:start 0 :length 10}
+                 {:source-start 3 :length 10 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Input:   0 to 10 (length 10)
+: Mapping: 3 to 13 (length 10)
+: [---------]...
+: ...[---------]...
+: Non-overlap before: 0 to 3 (length 3)
+: Overlap: 3 to 10 (length 7)
+: Mapped:  100 to 107 (length 7)
+
+#+begin_src clojure :results output
+  (print-mapping {:start 5 :length 8}
+                 {:source-start 0 :length 10 :target-start 100})
+#+end_src
+
+#+RESULTS:
+: Input:   5 to 13 (length 8)
+: Mapping: 0 to 10 (length 10)
+: .....[-------]...
+: [---------]...
+: Non-overlap after:  10 to 13 (length 3)
+: Overlap: 5 to 10 (length 5)
+: Mapped:  105 to 110 (length 5)
+

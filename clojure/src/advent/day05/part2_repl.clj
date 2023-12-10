@@ -44,9 +44,3 @@
 ;;       [{:target-start 60, :source-start 56, :length 37}
 ;;        {:target-start 56, :source-start 93, :length 4}]}]}
 
-(run "../input/day05/sample.txt")
-;; => 46
-
-(run "../input/day05/input.txt")
-;; This should return eventually,
-;; but I don't want to wait that long.
