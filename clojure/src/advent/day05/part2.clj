@@ -8,8 +8,8 @@
     {:seeds (into []
                   (comp (map parse-long)
                         (partition-all 2)
-                        (mapcat (fn [[start length]]
-                                  (range start (+ start length)))))
+                        (map (fn [[start length]]
+                               {:start start :length length})))
                   (string/split (string/trim seed-strings) #"\s+"))}))
 
 (defn parse-input [rdr]
@@ -20,4 +20,7 @@
 (defn run [input-path]
   (with-open [rdr (io/reader input-path)]
     (let [{:keys [seeds mappings]} (parse-input rdr)]
-      (apply min (map (fn [seed] (part1/seed-to-location seed mappings)) seeds)))))
+      (apply min (map (fn [seed] (part1/seed-to-location seed mappings))
+                      (mapcat (fn [{:keys [start length]}]
+                                (range start (+ start length)))
+                              seeds))))))

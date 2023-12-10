@@ -2,34 +2,7 @@
 
 (with-open [rdr (io/reader "../input/day05/sample.txt")]
   (parse-input rdr))
-;; => {:seeds
-;;     [79
-;;      80
-;;      81
-;;      82
-;;      83
-;;      84
-;;      85
-;;      86
-;;      87
-;;      88
-;;      89
-;;      90
-;;      91
-;;      92
-;;      55
-;;      56
-;;      57
-;;      58
-;;      59
-;;      60
-;;      61
-;;      62
-;;      63
-;;      64
-;;      65
-;;      66
-;;      67],
+;; => {:seeds [{:start 79, :length 14} {:start 55, :length 13}],
 ;;     :mappings
 ;;     [{:source "seed",
 ;;       :target "soil",
@@ -75,5 +48,5 @@
 ;; => 46
 
 (run "../input/day05/input.txt")
-;; => Execution error (OutOfMemoryError) at java.lang.Long/valueOf (Long.java:1204).
-;;    Java heap space
+;; This should return eventually,
+;; but I don't want to wait that long.
