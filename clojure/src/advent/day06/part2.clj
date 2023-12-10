@@ -1,4 +1,4 @@
-(ns advent.day06.part1
+(ns advent.day06.part2
   (:require [advent.day06.part1 :as part1]
             [clojure.java.io :as io]))
 
