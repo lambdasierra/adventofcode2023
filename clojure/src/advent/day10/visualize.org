@@ -1,0 +1,392 @@
+#+TITLE: Pipes Visualization
+#+SUBTITLE: Advent of Code 2023, Day 10
+#+OPTIONS: ':t ^:nil num:nil
+#+PROPERTY: header-args :eval never-export
+
+* Intro
+
+I didn't feel like doing the actual Day 10 puzzle.
+Pipes, loops, graph search ... ugh.
+Not my cup of tea.
+
+So instead, I thought it would be interesting
+to do some visualizations of the puzzle input.
+
+* Namespace Declaration
+
+All of the code examples that follow
+are in the following namespace:
+
+#+name: namespace-declaration
+#+begin_src clojure :results silent
+  (ns advent.day10.visualize
+    (:require [clojure.java.io :as io]
+              [clojure.string :as string])
+    (:import (java.awt Component Dimension Graphics)
+             (java.awt.image BufferedImage IndexColorModel)
+             (javax.imageio ImageIO)
+             (javax.swing JFrame SwingUtilities)))
+#+end_src
+
+* Tiles
+
+I’m not a game designer or a graphic artist,
+but I found a Creative Commons-licensed set of 2d game tiles
+that includes some pipes: [[https://ninjikin.itch.io/water][Water+]] by Itch.io user [[https://ninjikin.itch.io/][SciGho]].
+
+[[file:../../../../assets/water.png]]
+
+These tiles are released under the
+[[https://creativecommons.org/licenses/by/4.0/][Creative Commons Attribution v4.0 International]] license.
+
+* Working With Images
+
+There are game libraries for Clojure or Java,
+but again, I'm not a game designer.
+And I'm not trying to make a game,
+just some static images.
+
+When I need to do something in Clojure,
+I usually look for Java libraries first,
+as they tend to be stable, mature, and well-documented.
+And indeed, the Java 2D API
+has been included with Java since JDK version 1.0,
+and there's a [[https://docs.oracle.com/javase/tutorial/2d/index.html][2D Graphics trail in the Java Tutorials]].
+
+** Reading and Writing Image Files
+
+The [[https://docs.oracle.com/en/java/javase/21/docs//api/java.desktop/javax/imageio/ImageIO.html][ImageIO]] class handles reading and writing
+images as files.
+
+#+name: read-image
+#+begin_src clojure :results silent
+  (defn read-image [image-path]
+    (ImageIO/read (io/file image-path)))
+#+end_src
+
+#+name: write-png
+#+begin_src clojure :results silent
+  (defn write-png [^BufferedImage image image-path]
+    (ImageIO/write image
+                   "PNG"
+                   (io/file image-path)))
+#+end_src
+
+** Displaying an Image
+
+[[https://docs.oracle.com/javase/tutorial/uiswing/][Swing]] may be old-fashioned,
+and I wouldn't necessarily recommend it for a large app,
+but it's surprisingly easy and approachable
+if you just want to throw a window up on the screen.
+
+I don't really understand much of what's going on here,
+I'm just translating example code from tutorials.
+[[https://docs.oracle.com/en/java/javase/21/docs//api/java.desktop/javax/swing/SwingUtilities.html#invokeLater(java.lang.Runnable)][SwingUtilities/invokeLater]] isn't strictly necessary,
+but it's generally a good idea to run GUI operations
+on the Swing event thread.
+
+#+name: display-image
+#+begin_src clojure :results silent
+  (defn display-image [^BufferedImage image
+                       & {:keys [title width height]
+                          :or {title "Image"}}]
+    (SwingUtilities/invokeLater
+     (fn []
+       (let [component (proxy [Component] []
+                         (paint [^Graphics graphics]
+                           (.drawImage graphics image 0 0 nil))
+                         (getPreferredSize []
+                           (Dimension. (or width (.getWidth image nil))
+                                       (or height (.getHeight image nil)))))
+             frame (JFrame. (str title))]
+         (.setDefaultCloseOperation frame JFrame/DISPOSE_ON_CLOSE)
+         (.add frame component)
+         (.pack frame)
+         (.setVisible frame true)))))
+#+end_src
+
+Due to quirks of how Swing interacts with operating systems,
+the new window is not automatically brought to the foreground.
+After many fruitless minutes
+trying solutions from StackOverflow,
+I gave up.
+On macOS, I use [[https://support.apple.com/guide/mac-help/open-windows-spaces-mission-control-mh35798/mac][Mission Control]] to find the window
+and bring it to the front.
+
+#+begin_src clojure :results silent
+  (display-image (read-image "../assets/water.png")
+                 :title "Tiles")
+#+end_src
+
+[[file:../../../../assets/screenshot-tiles.png]]
+
+* Splitting Into Tiles
+
+The tiles in this set are 16x16 pixels.
+
+#+name: tile-size
+#+begin_src clojure :results silent
+  (def tile-width 16)
+
+  (def tile-height 16)
+#+end_src
+
+[[https://docs.oracle.com/en/java/javase/21/docs//api/java.desktop/java/awt/image/BufferedImage.html][BufferedImage]] has some built-in methods
+that refer to "tiles" but,
+from a quick glance at the Javadoc,
+they seemed to be more related
+to selectively updating parts of an image
+rather than extracting tiles out of an image.
+For that, [[https://docs.oracle.com/en/java/javase/21/docs//api/java.desktop/java/awt/image/BufferedImage.html#getSubimage(int,int,int,int)][getSubimage]] works fine.
+
+#+name: get-tile
+#+begin_src clojure :results silent
+  (defn get-tile [^BufferedImage image x y]
+    (.getSubimage image
+                  (* tile-width x)
+                  (* tile-height y)
+                  tile-width
+                  tile-height))
+#+end_src
+
+Having a quick way to display an image
+makes it easy to verify that this is working:
+
+#+begin_src clojure :eval no
+  (let [tileset-image (read-image "../assets/water.png")]
+    (display-image (get-tile tileset-image 0 10)
+                   :title "Tile x=0 y=10"
+                   :width 200
+                   :height 100))
+#+end_src
+
+[[file:../../../../assets/screenshot-pipe.png]]
+
+I only need a few tiles,
+which I'll map directly to the characters
+used in the Advent of Code puzzle.
+
+#+name: make-tile-map
+#+begin_src clojure :results silent
+  (defn make-tile-map [tileset-image]
+    {\| (get-tile tileset-image 2 11)  ; vertical
+     \- (get-tile tileset-image 1 10)  ; horizontal
+     \L (get-tile tileset-image 1 12)  ; north to east
+     \J (get-tile tileset-image 3 12)  ; north to west
+     \7 (get-tile tileset-image 1 11)  ; south to west
+     \F (get-tile tileset-image 3 11)  ; south to east
+     \. (get-tile tileset-image 0 6)   ; ground
+     \S (get-tile tileset-image 2 13)})  ; starting position
+#+end_src
+
+* Reading the Input Grid
+
+The input is a grid of characters,
+which I can represent as a vector of lines.
+
+The [[https://clojuredocs.org/clojure.string/split-lines][split-lines]] function returns a vector of strings,
+so I'll use it to parse the input.
+
+#+name: parse-grid
+#+begin_src clojure :results silent
+  (defn parse-grid [string]
+    (string/split-lines string))
+#+end_src
+
+Clojure's [[https://clojuredocs.org/clojure.core/nth][nth]] is constant-time on vectors *and* strings,
+so this gives a constant-time lookup of any location on the grid:
+
+#+name: get-grid-at
+#+begin_src clojure :results silent
+  (defn get-grid-at [grid x y]
+    (nth (nth grid y) x))
+#+end_src
+
+The height of the grid is just the number of lines:
+
+#+name: grid-height
+#+begin_src clojure :results silent
+  (defn grid-height [grid]
+    (count grid))
+#+end_src
+
+And the width is the length of a line,
+assuming all the lines are the same length:
+
+#+name: grid-width
+#+begin_src clojure :results silent
+  (defn grid-width [grid]
+    (count (first grid)))
+#+end_src
+
+** Examples
+
+The final example in the puzzle description looks like:
+
+#+begin_src clojure :results silent
+  (def example-string
+  "7-F7-
+  .FJ|7
+  SJLL7
+  |F--J
+  LJ.LJ")
+#+end_src
+
+The starting position is at x=0, y=2:
+
+#+begin_src clojure :exports both
+  (get-grid-at (parse-grid example-string) 0 2)
+#+end_src
+
+#+RESULTS:
+: \S
+
+* Drawing the Map
+
+Drawing the map is conceptually simple,
+but I had to tinker a bit with the [[https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/java/awt/image/BufferedImage.html][BufferedImage]] constructor
+to get the transparency in the tiles working correctly.
+I found that the easiest thing to do
+was to copy the settings from the tileset image.
+
+By poking around in the REPL,
+I worked out that the source tileset
+is [[https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/java/awt/image/BufferedImage.html#TYPE_BYTE_INDEXED][TYPE_BYTE_INDEXED]] with an [[https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/java/awt/image/IndexColorModel.html][IndexColorModel]].
+
+#+begin_src clojure :exports both
+  (let [tileset-image (read-image "../assets/water.png")]
+    (= BufferedImage/TYPE_BYTE_INDEXED (.getType tileset-image)))
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src clojure :exports both
+  (let [tileset-image (read-image "../assets/water.png")]
+    (.getColorModel tileset-image))
+#+end_src
+
+#+RESULTS:
+: #object[java.awt.image.IndexColorModel 0x3b4f4fcd "IndexColorModel: #pixelBits = 8 numComponents = 4 color space = java.awt.color.ICC_ColorSpace@150e0811 transparency = 2 transIndex   = 0 has alpha = true isAlphaPre = false"]
+
+I won't claim to understand exactly what these mean,
+so if you use this code with a different tileset
+you may have to make some changes.
+
+To create a matching BufferedImage for the output,
+I had to add some coercions ([[https://clojuredocs.org/clojure.core/int][int]])
+and type hints to eliminate reflection warnings:
+
+#+begin_src clojure :eval no
+  (BufferedImage.
+   (int (* (grid-width grid) tile-width scale))
+   (int (* (grid-height grid) tile-height scale))
+   (.getType tileset-image)
+   ^IndexColorModel (.getColorModel tileset-image))
+#+end_src
+
+With transparency working,
+I can use one of the tiles as a background
+and draw the pipes on top of it.
+This will draw the background twice
+on "empty" grid spaces, but it doesn't matter.
+
+#+name: draw-tiles
+#+begin_src clojure :results silent
+  (defn draw-tiles
+    "Returns a new BufferedImage generated from the tileset
+    and the parsed input grid.
+
+    Optional keyword argument :scale is an integer multiplier
+    applied to the size of the tiles, default 1."
+    [^BufferedImage tileset-image
+     grid
+     & {:keys [scale] :or {scale 1}}]
+    (let [tile-map (make-tile-map tileset-image)
+          buffer (BufferedImage.
+                  (int (* (grid-width grid) tile-width scale))
+                  (int (* (grid-height grid) tile-height scale))
+                  (.getType tileset-image)
+                  ^IndexColorModel (.getColorModel tileset-image))
+          graphics (.createGraphics buffer)]
+      (doseq [x (range (grid-width grid))
+              y (range (grid-height grid))]
+        ;; Draw background
+        (.drawImage graphics
+                    (get tile-map \.)
+                    (* x tile-width scale)
+                    (* y tile-height scale)
+                    (* tile-width scale)
+                    (* tile-height scale)
+                    nil)
+        ;; Draw pipe
+        (let [character (get-grid-at grid x y)
+              tile (get tile-map character)]
+          (.drawImage graphics
+                      tile
+                      (* x tile-width scale)
+                      (* y tile-height scale)
+                      (* tile-width scale)
+                      (* tile-height scale)
+                      nil)))
+      buffer))
+#+end_src
+
+** Examples
+
+And here's what it looks like on the example:
+
+#+begin_src clojure :eval no
+  (display-image
+   (draw-tiles (read-image "../assets/water.png")
+               (parse-grid example-string)
+               :scale 2))
+#+end_src
+
+[[file:../../../../assets/screenshot-example.png]]
+
+Even at 16x16 per tile,
+the actual puzzle input is too large to fit on my screen,
+so I'll save it to a file:
+
+#+begin_src clojure :eval no
+  (write-png
+   (draw-tiles (read-image "../assets/water.png")
+               (parse-grid (slurp "../input/day10/input.txt"))
+               :scale 2)
+   "/tmp/pipes.png")
+#+end_src
+
+Here is a small except from my puzzle input:
+
+[[file:../../../../assets/input-pipes.png]]
+
+* Output Source File                                               :noexport:
+
+#+begin_src clojure :tangle "visualize.clj" :noweb yes :eval no
+  <<namespace-declaration>>
+
+  (set! *warn-on-reflection* true)
+
+  <<read-image>>
+
+  <<write-png>>
+
+  <<display-image>>
+
+  <<tile-size>>
+
+  <<get-tile>>
+
+  <<make-tile-map>>
+
+  <<parse-grid>>
+
+  <<get-grid-at>>
+
+  <<grid-height>>
+
+  <<grid-width>>
+
+  <<draw-tiles>>
+#+end_src
